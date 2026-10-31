@@ -1,0 +1,19 @@
+[package]
+name = "trim-image"
+version = "0.1.0"
+description = "Trim white margins from patent drawing images (agent-friendly CLI)"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.104"
+clap = { version = "4.6.7", features = ["derive"] }
+crc32fast = "1.5.3"
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "tiff", "bmp", "gif", "webp"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tiff = "0.11"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
