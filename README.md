@@ -19,7 +19,15 @@
 | DPI | ImageMagick 기본 동작 | PNG/JPEG/TIFF/BMP의 DPI 보존 |
 | EXIF 회전 | — | 회전 정보를 반영해 화면에 보이는 방향 기준으로 처리 |
 
-## 빌드
+## 실행 파일 받기
+
+GitHub Actions가 푸시할 때마다 Windows / Linux / macOS용 실행 파일을 빌드합니다.
+
+- 저장소의 **Actions** 탭 → 최신 `build` 실행 → **Artifacts**에서
+  `trim-image-windows-x86_64.exe`를 내려받습니다.
+- `v0.1.0`처럼 `v`로 시작하는 태그를 푸시하면 **Releases**에도 자동으로 첨부됩니다.
+
+## 직접 빌드
 
 [Rust](https://rustup.rs/) 설치 후:
 
