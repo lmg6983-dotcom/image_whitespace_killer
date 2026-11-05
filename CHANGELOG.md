@@ -5,9 +5,15 @@
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-05
+
 ### 🔧 바뀐 점
 
 - 💄 확인 창·진행 창에 여백을 넉넉히 두어 글자가 테두리에 붙지 않게 했습니다
+
+### 📝 문서
+
+- README 미리보기를 실제 사용 화면으로 교체하고, 원본과 결과 비교 이미지를 추가했습니다
 
 ## [0.2.0] - 2026-11-05
 
@@ -35,6 +41,7 @@
   - 흰 여백 자르기, `도 1` · `도 2` … 이름 붙이기, 원본 정리
   - 미리보기(`--dry-run`), JSON 결과(`--json`), 실패 시 전체 취소
 
-[Unreleased]: https://github.com/lmg6983-dotcom/image_whitespace_killer/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/lmg6983-dotcom/image_whitespace_killer/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/lmg6983-dotcom/image_whitespace_killer/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/lmg6983-dotcom/image_whitespace_killer/compare/6088c72...v0.2.0
 [0.1.0]: https://github.com/lmg6983-dotcom/image_whitespace_killer/tree/6088c72

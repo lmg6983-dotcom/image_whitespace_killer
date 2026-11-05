@@ -2965,7 +2965,7 @@ dependencies = [
 
 [[package]]
 name = "trim-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "crc32fast",
@@ -2976,7 +2976,7 @@ dependencies = [
 
 [[package]]
 name = "trim-image"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -2986,7 +2986,7 @@ dependencies = [
 
 [[package]]
 name = "trim-image-gui"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "eframe",
