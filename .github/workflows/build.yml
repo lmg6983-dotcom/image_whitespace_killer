@@ -2,13 +2,13 @@ name: build
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: write # needed to attach binaries to a GitHub release on tags
+  contents: write # needed to publish a GitHub release on tags
 
 jobs:
   build:
@@ -18,16 +18,16 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            bin: trim-image.exe
-            asset: trim-image-windows-x86_64.exe
+            suffix: windows-x86_64
+            exe: .exe
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            bin: trim-image
-            asset: trim-image-linux-x86_64
+            suffix: linux-x86_64
+            exe: ""
           - os: macos-latest
             target: aarch64-apple-darwin
-            bin: trim-image
-            asset: trim-image-macos-arm64
+            suffix: macos-arm64
+            exe: ""
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -40,33 +40,58 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Test
-        run: cargo test --release --target ${{ matrix.target }}
+        run: cargo test --workspace --release --target ${{ matrix.target }}
 
       - name: Clippy
-        run: cargo clippy --release --target ${{ matrix.target }} -- -D warnings
+        run: cargo clippy --workspace --release --target ${{ matrix.target }} -- -D warnings
 
       - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --workspace --release --target ${{ matrix.target }}
 
-      - name: Smoke test
+      - name: Smoke test (CLI)
         shell: bash
         run: |
-          BIN="target/${{ matrix.target }}/release/${{ matrix.bin }}"
+          BIN="target/${{ matrix.target }}/release/trim-image${{ matrix.exe }}"
           "$BIN" --version
           mkdir smoke
           "$BIN" smoke --json
 
-      - name: Rename binary
+      - name: Collect binaries
         shell: bash
-        run: cp "target/${{ matrix.target }}/release/${{ matrix.bin }}" "${{ matrix.asset }}"
+        run: |
+          mkdir dist
+          R="target/${{ matrix.target }}/release"
+          cp "$R/trim-image-gui${{ matrix.exe }}" "dist/trim-image-gui-${{ matrix.suffix }}${{ matrix.exe }}"
+          cp "$R/trim-image${{ matrix.exe }}" "dist/trim-image-${{ matrix.suffix }}${{ matrix.exe }}"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset }}
-          path: ${{ matrix.asset }}
+          name: trim-image-${{ matrix.suffix }}
+          path: dist/*
 
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
         with:
-          files: ${{ matrix.asset }}
+          path: dist
+          merge-multiple: true
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="$VERSION" '
+            /^## / { if (found) exit; if (index($0, "[" v "]")) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          cat notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body_path: notes.md
+          files: dist/*

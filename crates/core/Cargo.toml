@@ -1,0 +1,14 @@
+[package]
+name = "trim-core"
+description = "Trim white margins from patent drawing images (shared engine)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+crc32fast = "1.5.3"
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "tiff", "bmp", "gif", "webp"] }
+serde = { version = "1.0.229", features = ["derive"] }
+tiff = "0.11"
