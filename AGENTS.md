@@ -4,6 +4,9 @@
 renames them `도 1.<ext>`, `도 2.<ext>`, … while deleting the originals. It is
 non-interactive and has no external dependencies.
 
+Use the `trim-image` command-line binary from agents and scripts.
+`trim-image-gui` is the desktop app for people; it is not scriptable.
+
 ## Recommended workflow
 
 1. **Preview**: `trim-image <dir-or-files> --dry-run --json`
@@ -51,7 +54,8 @@ originals of successful files are **deleted** (same as the legacy `.bat`).
       "written": true,
       "original_removed": true,                // original deleted or replaced
       "warnings": [],
-      "error": null
+      "error": null,
+      "error_code": null                       // read | decode | encode | write | exists
     }
   ]
 }
@@ -62,7 +66,10 @@ Statuses:
 - `trimmed`: margins removed and the result re-encoded.
 - `unchanged`: nothing to trim. The file was copied byte-for-byte (renamed if the template says so).
 - `blank`: the whole image is background. It is left uncropped and gets a warning; check it manually.
-- `failed`: see `error`. The original is untouched.
+- `failed`: see `error` (human-readable) and `error_code`. The original is untouched.
+  - `read`: the file could not be read. `decode`: not a readable image.
+  - `encode`: the result could not be encoded. `write`: the result could not be written or moved.
+  - `exists`: the target name belongs to a file outside the batch (use `--overwrite`, `--name` or `-o`).
 
 All paths in the report are absolute. Human-readable output (without `--json`)
 is for people only; parse JSON instead.

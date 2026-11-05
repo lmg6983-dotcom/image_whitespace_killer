@@ -1,0 +1,19 @@
+[package]
+name = "trim-image-gui"
+description = "Trim white margins from patent drawing images (desktop app)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "trim-image-gui"
+path = "src/main.rs"
+
+[dependencies]
+trim-core.workspace = true
+anyhow.workspace = true
+eframe = { version = "0.37", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "x11", "wayland"] }
+image = { version = "0.25.10", default-features = false }
+rfd = "0.17"
+serde = { version = "1.0.229", features = ["derive"] }

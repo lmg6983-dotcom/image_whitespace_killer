@@ -2,13 +2,18 @@ name: build
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Publish a GitHub release (tag v<version from Cargo.toml>)"
+        type: boolean
+        default: false
 
 permissions:
-  contents: write # needed to attach binaries to a GitHub release on tags
+  contents: write # needed to publish a GitHub release on tags
 
 jobs:
   build:
@@ -18,16 +23,16 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            bin: trim-image.exe
-            asset: trim-image-windows-x86_64.exe
+            suffix: windows-x86_64
+            exe: .exe
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            bin: trim-image
-            asset: trim-image-linux-x86_64
+            suffix: linux-x86_64
+            exe: ""
           - os: macos-latest
             target: aarch64-apple-darwin
-            bin: trim-image
-            asset: trim-image-macos-arm64
+            suffix: macos-arm64
+            exe: ""
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -40,33 +45,100 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Test
-        run: cargo test --release --target ${{ matrix.target }}
+        run: cargo test --workspace --release --target ${{ matrix.target }}
 
       - name: Clippy
-        run: cargo clippy --release --target ${{ matrix.target }} -- -D warnings
+        run: cargo clippy --workspace --release --target ${{ matrix.target }} -- -D warnings
 
       - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --workspace --release --target ${{ matrix.target }}
 
-      - name: Smoke test
+      - name: Smoke test (CLI)
         shell: bash
         run: |
-          BIN="target/${{ matrix.target }}/release/${{ matrix.bin }}"
+          BIN="target/${{ matrix.target }}/release/trim-image${{ matrix.exe }}"
           "$BIN" --version
           mkdir smoke
           "$BIN" smoke --json
 
-      - name: Rename binary
+      - name: Collect binaries
         shell: bash
-        run: cp "target/${{ matrix.target }}/release/${{ matrix.bin }}" "${{ matrix.asset }}"
+        run: |
+          mkdir dist
+          R="target/${{ matrix.target }}/release"
+          cp "$R/trim-image-gui${{ matrix.exe }}" "dist/trim-image-gui-${{ matrix.suffix }}${{ matrix.exe }}"
+          cp "$R/trim-image${{ matrix.exe }}" "dist/trim-image-${{ matrix.suffix }}${{ matrix.exe }}"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset }}
-          path: ${{ matrix.asset }}
+          name: trim-image-${{ matrix.suffix }}
+          path: dist/*
 
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+  release:
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
         with:
-          files: ${{ matrix.asset }}
+          path: dist
+          merge-multiple: true
+
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          DL="https://github.com/$REPO/releases/download/v$VERSION"
+          {
+            echo "<div align=\"center\">"
+            echo
+            echo "<img src=\"https://raw.githubusercontent.com/$REPO/main/docs/logo.png\" width=\"80\" alt=\"\">"
+            echo
+            echo "### 도면 여백 자르기 v$VERSION"
+            echo
+            echo "특허 도면의 흰 여백을 한 번에 잘라내고 \`도 1\` · \`도 2\` … 으로 이름까지 붙여 줍니다."
+            echo
+            echo "</div>"
+            echo
+            echo "## 📥 내려받기"
+            echo
+            echo "| | 🪟 Windows | 🍎 macOS (Apple 칩) | 🐧 Linux |"
+            echo "|---|---|---|---|"
+            echo "| **창 프로그램** · 대부분은 이것 | [\`.exe\` 받기]($DL/trim-image-gui-windows-x86_64.exe) | [받기]($DL/trim-image-gui-macos-arm64) | [받기]($DL/trim-image-gui-linux-x86_64) |"
+            echo "| 명령줄 도구 · 자동화용 | [\`.exe\` 받기]($DL/trim-image-windows-x86_64.exe) | [받기]($DL/trim-image-macos-arm64) | [받기]($DL/trim-image-linux-x86_64) |"
+            echo
+            echo "> [!TIP]"
+            echo "> Windows에서 \"Windows의 PC 보호\" 창이 뜨면 \`추가 정보\` → \`실행\`을 누르세요."
+            echo
+            awk -v v="$VERSION" '
+              /^## / { if (found) exit; if (index($0, "[" v "]")) { found = 1; next } }
+              /^\[.*\]: / { next }
+              found { print }
+            ' CHANGELOG.md | sed 's/^### /## /'
+            echo
+            echo "---"
+            echo
+            echo "📖 [사용 설명서](https://github.com/$REPO#readme) · 📝 [전체 변경 내역](https://github.com/$REPO/blob/main/CHANGELOG.md)"
+          } > notes.md
+          cat notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: 🎉 v${{ steps.version.outputs.version }}
+          body_path: notes.md
+          files: dist/*
