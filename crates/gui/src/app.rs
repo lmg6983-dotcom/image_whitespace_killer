@@ -1356,7 +1356,8 @@ impl App {
             Phase::Confirming => {
                 let n = self.files.len();
                 let mut action = None;
-                let modal = egui::Modal::new(egui::Id::unique("confirm")).show(ctx, |ui| {
+                let modal = egui::Modal::new(egui::Id::unique("confirm"))
+                    .frame(modal_frame(ctx)).show(ctx, |ui| {
                     ui.set_width(400.0);
                     ui.label(RichText::new(format!("원본 {n}개를 바꿉니다")).size(18.0).strong());
                     ui.add_space(4.0);
@@ -1394,22 +1395,24 @@ impl App {
                 }
             }
             Phase::Running { done, total } => {
-                egui::Modal::new(egui::Id::unique("running")).show(ctx, |ui| {
-                    ui.set_width(360.0);
-                    ui.label(RichText::new("여백을 자르는 중…").size(17.0).strong());
-                    ui.add_space(6.0);
-                    let frac = if total == 0 {
-                        0.0
-                    } else {
-                        done as f32 / total as f32
-                    };
-                    ui.add(egui::ProgressBar::new(frac).text(format!("{done} / {total}")));
-                    ui.label(
-                        RichText::new("끝날 때까지 창을 닫지 마세요.")
-                            .small()
-                            .color(theme::muted(ui.visuals())),
-                    );
-                });
+                egui::Modal::new(egui::Id::unique("running"))
+                    .frame(modal_frame(ctx))
+                    .show(ctx, |ui| {
+                        ui.set_width(360.0);
+                        ui.label(RichText::new("여백을 자르는 중…").size(17.0).strong());
+                        ui.add_space(6.0);
+                        let frac = if total == 0 {
+                            0.0
+                        } else {
+                            done as f32 / total as f32
+                        };
+                        ui.add(egui::ProgressBar::new(frac).text(format!("{done} / {total}")));
+                        ui.label(
+                            RichText::new("끝날 때까지 창을 닫지 마세요.")
+                                .small()
+                                .color(theme::muted(ui.visuals())),
+                        );
+                    });
             }
             _ => {}
         }
@@ -1460,6 +1463,12 @@ impl eframe::App for App {
 // ---------------------------------------------------------------------------
 // Small drawing helpers
 // ---------------------------------------------------------------------------
+
+fn modal_frame(ctx: &egui::Context) -> egui::Frame {
+    egui::Frame::popup(&ctx.global_style())
+        .inner_margin(24)
+        .corner_radius(10)
+}
 
 fn section(ui: &mut Ui, title: &str) {
     ui.add_space(10.0);
