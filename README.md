@@ -19,7 +19,9 @@
 
 <br>
 
-<img src="docs/screenshot.png" width="860" alt="도면 여백 자르기 실행 화면">
+<img src="docs/screenshot.png" width="860" alt="특허 도면 4장을 넣고 흐름도의 잘릴 부분을 미리 보는 실제 화면">
+
+<sub>실제 화면 — 스캔한 특허 도면 4장을 넣으면 잘려 나갈 여백이 어둡게 표시됩니다</sub>
 
 </div>
 
@@ -63,6 +65,25 @@
 번호 순서를 바꾸려면 `위로` / `아래로`를 누르세요.
 
 **3️⃣ 실행하기** — 오른쪽 아래 **`여백 자르기`** 를 누르면 끝!
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/screenshot.png" alt="미리보기 화면"></td>
+    <td align="center" width="33%"><img src="docs/screenshot-confirm.png" alt="원본 삭제 확인 창"></td>
+    <td align="center" width="33%"><img src="docs/screenshot-done.png" alt="완료 화면"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>확인하기</b> · 잘릴 부분 미리보기</sub></td>
+    <td align="center"><sub><b>실행하기</b> · 원본 삭제 전 한 번 더 확인</sub></td>
+    <td align="center"><sub><b>끝</b> · <code>도 1</code> ~ <code>도 4</code> 저장 완료</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/before-after.png" width="640" alt="원본 스캔 도면과 여백을 자른 결과 비교">
+  <br>
+  <sub>실제 결과 — A4 스캔(1240×1754)의 흰 여백만 잘라 <code>도 1.png</code>(572×937)로 저장</sub>
+</p>
 
 ### 📂 저장 방식
 
